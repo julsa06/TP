@@ -1,1 +1,23 @@
+*.class
+bin/
+.settings/
+
+# IDEA files #
+##############
+.idea/*
+*.iws
+
+
 .metadata/
+.classpath
+.project
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
