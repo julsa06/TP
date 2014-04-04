@@ -1,0 +1,114 @@
+
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.text.NumberFormat;
+import java.util.Locale;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
+public class Converter extends JFrame {
+	
+
+	public Converter() {
+		super("Конвертер валют");
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		JPanel panel = new JPanel();
+		panel.setLayout(null);
+		arrows = new ArrowsButton(rate);
+		result = new ResultLabel();
+		to = new ToLabel();
+		from = new FromLabel();
+		input = new InputFueld();
+		input.getDocument().addDocumentListener(result);
+		panel.add(arrows);
+		panel.add(result);
+		panel.add(to);
+		panel.add(from);
+		panel.add(input);
+		getContentPane().add(panel);
+		setSize(400, 100);
+		setResizable(false);
+		setLocationRelativeTo(null);
+	}
+
+
+
+	// показывает результат
+	private class ResultLabel extends JLabel implements DocumentListener {
+		private NumberFormat nf;
+
+		ResultLabel() {
+			super("");
+			nf = NumberFormat.getInstance(Locale.US);
+			nf.setMaximumFractionDigits(2);
+			nf.setGroupingUsed(false);
+			setSize(100, 30);
+			setLocation(3 * IND + 175, IND);
+		}
+
+		@Override
+		public void changedUpdate(DocumentEvent e) {
+		}
+
+		@Override
+		public void insertUpdate(DocumentEvent e) {
+			change();
+		}
+
+		@Override
+		public void removeUpdate(DocumentEvent e) {
+			change();
+		}
+
+		private void change() {
+			String text = input.getText();
+			String res = "";
+			if (!text.equals("")) {
+				try {
+					Double from = Double.parseDouble(text);
+					res = nf.format(from * rate);
+				} catch (NumberFormatException e) {
+					res = "Ошибка";
+				}
+			}
+			setText(res);
+		}
+
+	}
+
+	// показывает из какой валюты
+	private class FromLabel extends JLabel {
+		FromLabel() {
+			super("EUR");
+			setSize(40, 30);
+			setLocation(IND + 105, IND);
+		}
+	}
+
+	// показывает в какую валюту
+	private class ToLabel extends JLabel {
+		ToLabel() {
+			super("RUB");
+			setSize(40, 30);
+			setLocation(3 * IND + 280, IND);
+		}
+	}
+
+	// поле для ввода
+	private class InputFueld extends JTextField {
+		InputFueld() {
+			super(1);
+			setSize(100, 30);
+			setLocation(IND, IND);
+		}
+
+	}
+}
