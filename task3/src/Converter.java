@@ -1,17 +1,16 @@
 // Абдрашитова Юлия, гр.2743
 
 import java.awt.FlowLayout;
+import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Scanner;
-import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -67,44 +66,61 @@ public class Converter extends JFrame {
 	}
 
 	// обработка данных
-	private class Reader extends SwingWorker<Object, Object> {
+	private class Reader extends SwingWorker<Exception, Currency> {
+
+		// обрабатывает полученные данные
+		@Override
+		protected void process(List<Currency> chunks) {
+
+			for (Currency currency : chunks) {
+				for (RowPanel panel : rowPanels) {
+					panel.addCurrency(currency);
+				}
+				pack();
+			}
+
+		}
 
 		@Override
-		protected Object doInBackground() throws Exception {
+		protected Exception doInBackground() {
 			try {
 				Scanner scan = new Scanner(new File(dataFile));
 				while (scan.hasNext()) {
 					Thread.sleep(2000); // искуственная задержка получения
 										// данных
-					String key = scan.next();
-					String rateString = scan.next();
-					String name = scan.nextLine();
+					Scanner scanStr = new Scanner(scan.nextLine());
 
-					// переводит курс из строки в число или создает окно ошибки,
-					// если не вышло
-					try {
-						double rate = Double.parseDouble(rateString);
-						if (rate <= 0) {
-							throw new NumberFormatException();
-						}
-						for (RowPanel panel : rowPanels) {
-							panel.addCurrency(new Currency(key, name, rate));
-						}
-					} catch (NumberFormatException e) {
-						JOptionPane.showMessageDialog(null,
-								"Некорректные данные", "Ошибка",
-								JOptionPane.ERROR_MESSAGE);
-						System.exit(-1);
+					// парсит строку
+					String key = scanStr.next();
+					String rateString = scanStr.next();
+					String name = scanStr.nextLine();
+					double rate = Double.parseDouble(rateString);
+					if (rate <= 0) {
+						throw new NumberFormatException();
 					}
-					pack();
+					publish(new Currency(key, name, rate));
 				}
-			} catch (FileNotFoundException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, "Файл с данными не найден",
-						"Ошибка", JOptionPane.ERROR_MESSAGE);
-				System.exit(-1);
+				return e;
 			}
 			return null;
+		}
+
+		@Override
+		protected void done() {
+			try {
+				Exception e = get();
+				if (e != null) {
+					JOptionPane.showMessageDialog(null, "Некорректные данные",
+							"Ошибка", JOptionPane.ERROR_MESSAGE);
+					System.exit(-1);
+				}
+			} catch (InterruptedException | ExecutionException e1) {
+				e1.printStackTrace();
+			}
+
+			super.done();
 		}
 	}
 
